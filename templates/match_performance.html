@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('list_matches') }}" style="color: var(--text-muted); text-decoration: none;">&larr; Back to
+        Matches</a>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">{{ match.opponent }}</h2>
+            <p style="color: var(--text-muted);">
+                {{ match.date }} at {{ match.venue }} •
+                <span class="badge badge-{{ match.result|lower }}">
+                    {{ match.result }}
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <h3>Record Performances</h3>
+    <form method="POST">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="text-align: left; padding: 1rem; width: 200px;">Player</th>
+                        <th style="text-align: center; padding: 1rem;">Played?</th>
+                        <th style="text-align: center; padding: 1rem;">Runs</th>
+                        <th style="text-align: center; padding: 1rem;">Not Out?</th>
+                        <th style="text-align: center; padding: 1rem;">Balls</th>
+                        <th style="text-align: center; padding: 1rem;">Overs</th>
+                        <th style="text-align: center; padding: 1rem;">Mdns</th>
+                        <th style="text-align: center; padding: 1rem;">Runs Conc.</th>
+                        <th style="text-align: center; padding: 1rem;">Wickets</th>
+                        <th style="text-align: center; padding: 1rem;">Catches</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    {% set perf = performances_map.get(player._id|string) %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 600;">{{ player.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ player.role }}</div>
+                            <input type="hidden" name="player_id_{{ loop.index }}" value="{{ player._id }}">
+                            <input type="hidden" name="player_name_{{ loop.index }}" value="{{ player.name }}">
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <input type="checkbox" name="played_{{ loop.index }}" value="1" {% if perf %}checked{% endif
+                                %}>
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="runs_{{ loop.index }}" value="{{ perf.runs if perf else 0 }}"
+                                style="width: 60px; text-align: center;">
+                        </td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                            <input type="checkbox" name="not_out_{{ loop.index }}" value="1" {% if perf and
+                                perf.is_not_out %}checked{% endif %}>
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="balls_faced_{{ loop.index }}"
+                                value="{{ perf.balls_faced if perf else 0 }}" style="width: 60px; text-align: center;">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" step="0.1" name="overs_{{ loop.index }}"
+                                value="{{ perf.overs if perf else 0 }}" style="width: 60px; text-align: center;"
+                                onchange="validateOvers(this)">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="maidens_{{ loop.index }}"
+                                value="{{ perf.maidens if perf else 0 }}" style="width: 60px; text-align: center;">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="runs_conceded_{{ loop.index }}"
+                                value="{{ perf.runs_conceded if perf else 0 }}"
+                                style="width: 60px; text-align: center;">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="wickets_{{ loop.index }}"
+                                value="{{ perf.wickets if perf else 0 }}" style="width: 60px; text-align: center;">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <input type="number" name="catches_{{ loop.index }}"
+                                value="{{ perf.catches if perf else 0 }}" style="width: 60px; text-align: center;">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 2rem; text-align: right;">
+            <input type="hidden" name="total_players" value="{{ players|length }}">
+            <button type="submit" class="btn-primary">Save All Performances</button>
+        </div>
+    </form>
+
+    {% if match.performances %}
+    <div style="margin-top: 3rem;">
+        <h3>Recorded Performances</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Batting (R/B)</th>
+                    <th>Bowling (O-M-R-W)</th>
+                    <th>Catches</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perf in match.performances %}
+                <tr>
+                    <td style="font-weight: 600;">{{ perf.player_name }}</td>
+                    <td>{{ perf.runs }}{% if perf.is_not_out %}*{% endif %} ({{ perf.balls_faced }})</td>
+                    <td>{{ perf.overs }} - {{ perf.maidens|default(0) }} - {{ perf.runs_conceded }} - {{ perf.wickets }}
+                    </td>
+                    <td>{{ perf.catches }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function validateOvers(input) {
+        const value = parseFloat(input.value);
+        const decimalPart = Math.round((value % 1) * 10) / 10;
+        if (decimalPart >= 0.6) {
+            alert('Invalid overs! The decimal part cannot be 0.6 or greater (6 balls = 1 over).');
+            input.value = Math.floor(value);
+            input.focus();
+        }
+    }
+</script>
+{% endblock %}

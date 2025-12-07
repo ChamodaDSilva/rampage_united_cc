@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h3>Edit Player: {{ player.name }}</h3>
+    <form method="POST" action="{{ url_for('edit_player', player_id=player._id) }}">
+        <div>
+            <label for="name" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full Name</label>
+            <input type="text" id="name" name="name" value="{{ player.name }}" required>
+        </div>
+        <div>
+            <label for="role" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Role</label>
+            <select id="role" name="role" required>
+                <option value="Batsman" {% if player.role == 'Batsman' %}selected{% endif %}>Batsman</option>
+                <option value="Bowler" {% if player.role == 'Bowler' %}selected{% endif %}>Bowler</option>
+                <option value="All-Rounder" {% if player.role == 'All-Rounder' %}selected{% endif %}>All-Rounder</option>
+                <option value="Wicket Keeper" {% if player.role == 'Wicket Keeper' %}selected{% endif %}>Wicket Keeper</option>
+            </select>
+        </div>
+        <div>
+            <label for="batting_style" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Batting Style</label>
+            <select id="batting_style" name="batting_style" required>
+                <option value="Right Hand Bat" {% if player.batting_style == 'Right Hand Bat' %}selected{% endif %}>Right Hand Bat</option>
+                <option value="Left Hand Bat" {% if player.batting_style == 'Left Hand Bat' %}selected{% endif %}>Left Hand Bat</option>
+            </select>
+        </div>
+        <div>
+            <label for="bowling_style" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Bowling Style</label>
+            <select id="bowling_style" name="bowling_style" required>
+                <option value="None" {% if player.bowling_style == 'None' %}selected{% endif %}>None</option>
+                <option value="Right Arm Fast" {% if player.bowling_style == 'Right Arm Fast' %}selected{% endif %}>Right Arm Fast</option>
+                <option value="Right Arm Medium" {% if player.bowling_style == 'Right Arm Medium' %}selected{% endif %}>Right Arm Medium</option>
+                <option value="Right Arm Spin" {% if player.bowling_style == 'Right Arm Spin' %}selected{% endif %}>Right Arm Spin</option>
+                <option value="Left Arm Fast" {% if player.bowling_style == 'Left Arm Fast' %}selected{% endif %}>Left Arm Fast</option>
+                <option value="Left Arm Medium" {% if player.bowling_style == 'Left Arm Medium' %}selected{% endif %}>Left Arm Medium</option>
+                <option value="Left Arm Spin" {% if player.bowling_style == 'Left Arm Spin' %}selected{% endif %}>Left Arm Spin</option>
+            </select>
+        </div>
+        <div>
+            <label for="fees_pending" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Fees Pending (LKR)</label>
+            <input type="number" id="fees_pending" name="fees_pending" value="{{ player.fees_pending }}" required>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('list_players') }}" style="padding: 0.5rem 1rem; text-decoration: none; color: var(--text-muted);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

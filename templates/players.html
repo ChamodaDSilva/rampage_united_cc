@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+    <div>
+        <div class="card">
+            <h3>Add New Player</h3>
+            <form method="POST" action="{{ url_for('add_player') }}">
+                <div>
+                    <label for="name" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full
+                        Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="role"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="Batsman">Batsman</option>
+                        <option value="Bowler">Bowler</option>
+                        <option value="All-Rounder">All-Rounder</option>
+                        <option value="Wicket Keeper">Wicket Keeper</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="batting_style"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Batting Style</label>
+                    <select id="batting_style" name="batting_style" required>
+                        <option value="Right Hand Bat">Right Hand Bat</option>
+                        <option value="Left Hand Bat">Left Hand Bat</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="bowling_style"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Bowling Style</label>
+                    <select id="bowling_style" name="bowling_style" required>
+                        <option value="None">None</option>
+                        <option value="Right Arm Fast">Right Arm Fast</option>
+                        <option value="Right Arm Medium">Right Arm Medium</option>
+                        <option value="Right Arm Spin">Right Arm Spin</option>
+                        <option value="Left Arm Fast">Left Arm Fast</option>
+                        <option value="Left Arm Medium">Left Arm Medium</option>
+                        <option value="Left Arm Spin">Left Arm Spin</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="fees_pending"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Fees Pending
+                        (LKR)</label>
+                    <input type="number" id="fees_pending" name="fees_pending" value="0" required>
+                </div>
+                <button type="submit">Add Player</button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Squad List</h3>
+                <form action="{{ url_for('list_players') }}" method="GET" style="display: flex; gap: 0.5rem;">
+                    <input type="text" name="search" placeholder="Search players..." value="{{ search_query }}"
+                        style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button type="submit" class="btn-primary" style="padding: 0.5rem 1rem;">Search</button>
+                    {% if search_query %}
+                    <a href="{{ url_for('list_players') }}" class="btn-secondary"
+                        style="padding: 0.5rem 1rem; text-decoration: none; display: flex; align-items: center;">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+            {% if players %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Mat</th>
+                        <th>Inn</th>
+                        <th>NO</th>
+                        <th>B.Inn</th>
+                        <th>Fees Pending</th>
+                        <th>Batting Stats</th>
+                        <th>Bowling Stats</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ player.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ player.batting_style }} • {{
+                                player.bowling_style }}</div>
+                        </td>
+                        <td>{{ player.role }}</td>
+                        <td>{{ player.stats.matches }}</td>
+                        <td>{{ player.stats.innings_batted|default(0) }}</td>
+                        <td>{{ player.stats.not_outs|default(0) }}</td>
+                        <td>{{ player.stats.innings_bowled|default(0) }}</td>
+                        <td style="color: #ef4444; font-weight: 600;">LKR {{ player.fees_pending|default(0) }}</td>
+                        <td>
+                            <div style="font-size: 0.9rem;">
+                                <div>Runs: {{ player.stats.runs }}</div>
+                                <div>Avg: {{ (player.stats.runs / (player.stats.innings_batted|default(0) -
+                                    player.stats.not_outs|default(0)))|round(2) if
+                                    (player.stats.innings_batted|default(0) -
+                                    player.stats.not_outs|default(0)) > 0 else player.stats.runs }}</div>
+                                <div>SR: {{ ((player.stats.runs / player.stats.balls_faced) * 100)|round(2) if
+                                    player.stats.balls_faced and player.stats.balls_faced > 0 else 0 }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.9rem;">
+                                <div>Wkts: {{ player.stats.wickets }}</div>
+                                <div>Overs: {{ (player.stats.balls_bowled|default(0) // 6) }}.{{
+                                    (player.stats.balls_bowled|default(0) % 6) }}
+                                </div>
+                                <div>Avg: {{ (player.stats.runs_conceded / player.stats.wickets)|round(2) if
+                                    player.stats.wickets and player.stats.wickets > 0 else 0 }}</div>
+                                <div>SR: {{ (player.stats.balls_bowled|default(0) / player.stats.wickets)|round(2) if
+                                    player.stats.wickets and player.stats.wickets > 0 else 0 }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="{{ url_for('edit_player', player_id=player['_id']) }}" class="btn-secondary"
+                                    style="text-decoration: none; font-size: 0.8rem; padding: 0.25rem 0.5rem;">Edit</a>
+                                <form action="{{ url_for('delete_player', player_id=player['_id']) }}" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to delete this player?');"
+                                    style="margin: 0;">
+                                    <button type="submit" class="btn-secondary"
+                                        style="background-color: #ef4444; color: white; border: none; padding: 0.25rem 0.5rem; font-size: 0.8rem; cursor: pointer;">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No players added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
